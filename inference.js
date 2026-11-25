@@ -4,7 +4,11 @@ const TILE = 480;
 const CONTEXT = 64;
 const OVERLAP = 160;
 const PREVIEW_EDGE = TILE - 2 * CONTEXT;
-const model = name => new URL("./model/" + name, import.meta.url).href;
+const model = name => {
+    const url = new URL("./model/" + name, import.meta.url);
+    url.search = new URL(import.meta.url).search;
+    return url.href;
+};
 
 ort.env.wasm.numThreads = 1;
 ort.env.wasm.wasmPaths = {

@@ -153,7 +153,7 @@ function generate() {
     setBusy(true, "正在准备重绘");
     byId("cancel").hidden = false;
     if (!worker) {
-        worker = new Worker("./inference.js", { type: "module" });
+        worker = new Worker("./inference.js?v=2", { type: "module" });
         worker.onerror = (event) => {
             console.error("Worker failed to start", event.message);
             worker.terminate();
