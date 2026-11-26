@@ -81,6 +81,13 @@ h2 { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 800; }
 .mode-options input:focus-visible + span { outline: 3px solid #79af98; outline-offset: 1px; }
 .mode-options input:disabled { cursor: wait; }
 .mode p { min-height: 34px; margin: 9px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+.tone-option {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
+    margin-top: 11px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px;
+}
+.tone-option strong { display: block; font-size: 13px; }
+.tone-option small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.tone-option input { flex: none; width: 17px; height: 17px; margin: 0; accent-color: var(--green); cursor: inherit; }
 .run {
     width: 100%; margin-top: 9px; padding: 11px 10px;
     border: 1px solid var(--green); border-radius: 8px; background: var(--green);

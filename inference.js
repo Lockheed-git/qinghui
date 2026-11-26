@@ -1,4 +1,5 @@
 import * as ort from "./runtime/ort.webgpu.module.js";
+import { applyTone, estimateOutputTone, estimateTone } from "./tone.js";
 
 const TILE = 480;
 const CONTEXT = 64;
@@ -6,7 +7,7 @@ const OVERLAP = 160;
 const PREVIEW_EDGE = TILE - 2 * CONTEXT;
 const model = name => {
     const url = new URL("./model/" + name, import.meta.url);
-    url.search = new URL(import.meta.url).search;
+    url.search = "?v=2"; // Model files keep their own cache version.
     return url.href;
 };
 
@@ -227,7 +228,7 @@ async function renderTiled(image, reference) {
     }
 }
 
-async function run(file, mode) {
+async function run(file, mode, enhance) {
     const bitmap = await createImageBitmap(file);
     try {
         if (bitmap.width * bitmap.height > 24_000_000 || Math.max(bitmap.width, bitmap.height) > 8192) {
@@ -236,6 +237,8 @@ async function run(file, mode) {
         await prepareGuide();
         const started = performance.now();
         const guide = readPixels(bitmap, PREVIEW_EDGE);
+        const tone = enhance ? estimateTone(guide) : null;
+        applyTone(guide, tone);
         const tiled = mode === "native" && (guide.width !== bitmap.width || guide.height !== bitmap.height);
         const width = paddedSize(guide.width);
         const height = paddedSize(guide.height);
@@ -246,15 +249,21 @@ async function run(file, mode) {
         try {
             if (tiled) {
                 image = readPixels(bitmap, Infinity);
+                applyTone(image, tone);
                 await renderTiled(image, reference);
+                if (tone) applyTone(image, estimateOutputTone(guide, image));
             } else if (mode === "color") {
                 const source = new ImageData(guide.data.slice(), guide.width, guide.height);
                 writeDirect(guide, result.data, width, height);
+                if (tone) applyTone(guide, estimateOutputTone(source, guide));
                 report("正在给原尺寸照片调色");
                 image = readPixels(bitmap, Infinity);
+                applyTone(image, tone);
                 transferColors(image, source, guide);
             } else {
+                const source = tone ? new ImageData(guide.data.slice(), guide.width, guide.height) : null;
                 writeDirect(image, result.data, width, height);
+                if (source) applyTone(image, estimateOutputTone(source, image));
             }
         } finally {
             input.dispose();
@@ -265,7 +274,7 @@ async function run(file, mode) {
         const canvas = new OffscreenCanvas(image.width, image.height);
         canvas.getContext("2d").putImageData(image, 0, 0);
         const blob = await canvas.convertToBlob({ type: "image/png" });
-        postMessage({ type: "result", blob, width: image.width, height: image.height, backend,
+        postMessage({ type: "result", blob, width: image.width, height: image.height, backend, enhanced: !!tone,
             seconds: (performance.now() - started) / 1000 });
     } finally {
         bitmap.close();
@@ -274,7 +283,7 @@ async function run(file, mode) {
 
 addEventListener("message", async ({ data }) => {
     try {
-        await run(data.file, data.mode);
+        await run(data.file, data.mode, data.enhance);
     } catch (error) {
         console.error(error);
         postMessage({ type: "error", message: error.message });

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="用 Scenimefy 在浏览器里把照片重绘成动画背景。">
     <title>晴绘 · Scenimefy 4K</title>
-    <link rel="stylesheet" href="./style.css">
-    <script defer src="./app.js?v=2"></script>
+    <link rel="stylesheet" href="./style.css?v=3">
+    <script defer src="./app.js?v=3"></script>
 </head>
 <body>
     <header class="topbar">
@@ -58,6 +58,11 @@
                     </div>
                     <p id="mode-hint">从重绘缩略图提取颜色，应用到原图。</p>
                 </fieldset>
+
+                <label class="tone-option">
+                    <span><strong>鲜亮预处理</strong><small>自动提亮暗部，增强偏灰画面的对比度。</small></span>
+                    <input id="enhance" type="checkbox" checked>
+                </label>
 
                 <button class="run" id="run" type="button" hidden>重新重绘</button>
                 <div class="progress" id="progress" role="status" hidden>

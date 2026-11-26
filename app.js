@@ -64,6 +64,7 @@ function setBusy(value, message = "正在重绘") {
     fileInput.disabled = value;
     runButton.disabled = value;
     modeInputs.forEach((input) => { input.disabled = value; });
+    byId("enhance").disabled = value;
     exampleButtons.forEach((button) => { button.disabled = value; });
     byId("viewport").setAttribute("aria-busy", String(value));
     byId("progress-label").textContent = message;
@@ -149,11 +150,12 @@ function generate() {
     if (!selectedFile || busy) return;
     const { file } = selectedFile;
     const mode = document.querySelector("input[name=mode]:checked").value;
+    const enhance = byId("enhance").checked;
     errorMessage("");
     setBusy(true, "正在准备重绘");
     byId("cancel").hidden = false;
     if (!worker) {
-        worker = new Worker("./inference.js?v=2", { type: "module" });
+        worker = new Worker("./inference.js?v=3", { type: "module" });
         worker.onerror = (event) => {
             console.error("Worker failed to start", event.message);
             worker.terminate();
@@ -182,12 +184,13 @@ function generate() {
         const { blob, width, height, seconds } = data;
         const previous = outputUrl;
         outputUrl = URL.createObjectURL(blob);
-        const caption = width + " × " + height + " · " + modeLabels[mode] + " · " + seconds.toFixed(1) + " 秒";
+        const processing = modeLabels[mode] + (data.enhanced ? " + 鲜亮" : "");
+        const caption = width + " × " + height + " · " + processing + " · " + seconds.toFixed(1) + " 秒";
         const name = file.name.replace(/\.[^.]+$/, "") + "-晴绘.png";
         showPreview(inputUrl, outputUrl, selectedFile.width, selectedFile.height, caption, name);
         if (previous) URL.revokeObjectURL(previous);
     };
-    worker.postMessage({ file, mode });
+    worker.postMessage({ file, mode, enhance });
 }
 
 function setDevice(label) {
